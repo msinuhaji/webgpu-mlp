@@ -1,2 +1,2 @@
-\# WebGPU-Based Convolutional Neural Network, from scratch\*
+\# WebGPU-Based Multilayer Perceptron, from scratch\*
 
