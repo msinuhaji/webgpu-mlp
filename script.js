@@ -1,77 +1,94 @@
-// icl ts is ai generated code so that i can learn webgpu and wgsl
+// the plan is to create a basic, regressional mlp which approximates a function.
+// the constraint is that i'm not allowed to use ANY external libraries
+// hi github
+// i wrote comments just for you
 
-// const a = new Float32Array([5]);
-// const b = new Float32Array([1]); // not strictly needed, but keeping your idea
+class Layer {
+    constructor(parameters, nonLinearity) {
 
-// async function init() {
-//     if (!navigator.gpu) {
-//         throw Error("WebGPU not supported.");
-//     }
+        // the last parameter will be the bias => [w_1, w_2, ..., w_n-1, w_n, b] per neuron
+        // it would look like [neuron, neuron, neuron], sp [[w, b], [w, b], ...] then flattened to [w, b, w, b, ...]
+        // non linear functions will be handled by the gpu (webgpu) so we need to read some wgsl or buffer or something, im not sure how
 
-//     const adapter = await navigator.gpu.requestAdapter();
-//     const device = await adapter.requestDevice();
+        this.parameters = parameters;
+        this.nonLinearity = nonLinearity;
 
-//     // --------
+    }
+    forward(input) {
 
-//     // 1. Create buffer for input (a = 5)
-//     const inputBuffer = device.createBuffer({
-//         size: a.byteLength,
-//         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_DST
-//     });
+        // right now in a cpu based system, input refers to the array passed by the previous layer, but later it should refer to buffer location
 
-//     // 2. Create buffer for output
-//     const outputBuffer = device.createBuffer({
-//         size: a.byteLength,
-//         usage: GPUBufferUsage.STORAGE | GPUBufferUsage.COPY_SRC
-//     });
+        const inputDimension = input.length;
+        const quotient = this.parameters.length / (inputDimension + 1); // how many indexes, if its an integer
 
-//     // 3. Send data into GPU
-//     device.queue.writeBuffer(inputBuffer, 0, a);
+        // and then, assuming that parameters and input size cleanly pro
+        if (
+            Number.isInteger(quotient)
+        ) {
+            // for all the neurons, fill them with 0 (placeholder) then map that to specific weights, bias; (thank god js doesnt need type identifiers)
+            const neuronParameters = new Array(quotient).fill(0).map((_, i) => {
+                const sectionStart = (inputDimension + 1) * i;
+                return this.parameters.slice(sectionStart, sectionStart + inputDimension + 1);
+            });
 
-//     // 4. WGSL shader (GPU code)
-//     const shaderModule = device.createShaderModule({ // this code will be ran on the gpu
-//         code: `
-//         @group(0) @binding(0)
-//         var<storage, read> input: array<f32>;
+            let output = [];
 
-//         @group(0) @binding(1)
-//         var<storage, read_write> output: array<f32>;
+            for (const parameters of neuronParameters) { // for every neuron in parameters
+                let dotProduct = parameters[parameters.length - 1]; // set it to bias first so that 
+                for (let i = 0; i < parameters.length - 1; i++) {
+                    dotProduct = dotProduct + (parameters[i] * input[i]);
+                }
 
-//         @compute
-//         @workgroup_size(1)
-//         fn main(@builtin(global_invocation_id) id: vec3<u32>) {
-//             output[id.x] = input[id.x] + 1.0;
-//         }
-//         `
-//     });
+                output.push(dotProduct);
+            }
 
-//     // 5. Pipeline
-//     const pipeline = device.createComputePipeline({ // a precompiled gpu program configuration that tells the gpu exactly how to run your shader
-//         layout: "auto",
-//         compute: {
-//             module: shaderModule,
-//             entryPoint: "main"
-//         }
-//     });
+            return output;
+        }
 
-//     // 6. Bind buffers to WGSL
-//     const bindGroup = device.createBindGroup({
-//         layout: pipeline.getBindGroupLayout(0),
-//         entries: [
-//             { binding: 0, resource: { buffer: inputBuffer } },
-//             { binding: 1, resource: { buffer: outputBuffer } }
-//         ]
-//     });
+    }
+    backward() {
 
-//     // 7. Run GPU
-//     const encoder = device.createCommandEncoder();
+    }
+}
 
-//     const pass = encoder.beginComputePass();
-//     pass.setPipeline(pipeline);
-//     pass.setBindGroup(0, bindGroup);
+class NeuralNetwork {
+    constructor(layers) { // ouu shii i forgot that getting device n adapter is async so i move to init method
+        this.device = null;
+        this.layers = layers;
 
-//     pass.dispatchWorkgroups(1);
-//     pass.end();
+        // layers and stuff go here
+    }
 
-//     device.queue.submit([encoder.finish()]);
-// }
+    // BUT, i wont touch GPU right now, too little time
+
+    async init() { // initialise webgpu stff
+        const gpu = navigator.gpu;
+        if (gpu) { //icl im just using an if statement and nesting everything in there bc it looks cooler
+
+            const adapter = await gpu.requestAdapter();
+            this.device = await adapter.requestDevice();
+
+            // then i set the batches and stuff and the pipeline.... later. not here; plus, each layer should have its own wgsl definition
+
+        } else {
+            console.error("no gpu found")
+        }
+    }
+}
+
+// and so running should look something like
+
+new NeuralNetwork([
+    new Layer(),
+    new Layer(),
+    new Layer(),
+]);
+
+// const input; //whatever input would be (user selected)
+// const [l1, l2, l3] = [new Layer(), new Layer(), new Layer()];
+
+// // compositional function form
+// l3.forward(l2.forward(l1.forward(input))); // forward propogation
+
+// FUNCTIONS
+// lol, i watched 1 cs50 course video, and now i abstract EVERYTHING lmao
