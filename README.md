@@ -17,7 +17,7 @@ This is currently my first project in a sequence of three.
 This project contains both CPU-based and GPU-based versions of identical architecture.
 
 - [x] I first write my MLP's forward propogation using vanilla JS (CPU-based).
-- [ ] Then, I write my MLP's backward propagation using vanilla JS (CPU-based).
+- [x] Then, I write my MLP's backward propagation using vanilla JS (CPU-based).
 - [ ] After, I transfer my architecture to become GPU-based via WebGPU.
 
 ### What I've learnt
